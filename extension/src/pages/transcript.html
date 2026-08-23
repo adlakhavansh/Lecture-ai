@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lecture AI — Transcript</title>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="transcript.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 id="page-title">Transcript</h1>
+      <div class="header-actions">
+        <span id="segment-count" class="badge">0 segments</span>
+        <span id="flag-count" class="badge is-flag hidden">0 flagged</span>
+        <button id="btn-summary" class="btn-sm hidden">Summary</button>
+        <button id="btn-copy" class="btn-sm">Copy all</button>
+      </div>
+    </div>
+    <p class="hint">Hover any line to flag it as unclear. Flagged lines get re-explained at the top of the summary.</p>
+    <div id="transcript" class="transcript"></div>
+    <div id="empty" class="empty">No transcript yet. Start a lecture to begin.</div>
+    <div id="meta" class="empty" style="padding: 24px 0 0"></div>
+  </div>
+  <script type="module" src="transcript.js"></script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lecture AI</title>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body class="panel">
+
+  <!-- ── top bar ────────────────────────────────────────────────────────── -->
+  <header class="bar">
+    <div class="brand">
+      <span id="pulse" class="pulse is-idle" aria-hidden="true"></span>
+      <span class="brand-name">lecture<span class="brand-ai">ai</span></span>
+    </div>
+    <div class="bar-right">
+      <button id="btn-history" class="icon-btn" type="button"
+              title="Past lectures" aria-label="Past lectures">
+        <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">
+          <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M8 4.8V8l2.3 1.6" fill="none" stroke="currentColor"
+                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button id="btn-settings" class="icon-btn" type="button"
+              title="Keys and setup" aria-label="Keys and setup">
+        <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">
+          <circle cx="8" cy="8" r="2.1" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M8 1.6v1.8M8 12.6v1.8M2.4 8H4.2M11.8 8h1.8M4.05 4.05l1.27 1.27M10.68 10.68l1.27 1.27M11.95 4.05l-1.27 1.27M5.32 10.68L4.05 11.95"
+                fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <span id="timer" class="timer">00:00</span>
+      <button id="btn-pause" class="icon-btn hidden" type="button"
+              title="Pause capture" aria-label="Pause capture">
+        <svg id="ico-pause" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+          <path d="M5.6 3.4v9.2M10.4 3.4v9.2" fill="none" stroke="currentColor"
+                stroke-width="1.9" stroke-linecap="round"/>
+        </svg>
+        <svg id="ico-play" viewBox="0 0 16 16" width="12" height="12" class="hidden" aria-hidden="true">
+          <path d="M4.8 3.2l7.4 4.8-7.4 4.8z" fill="currentColor"/>
+        </svg>
+      </button>
+      <button id="btn-toggle" class="pill">Start</button>
+    </div>
+  </header>
+
+  <!-- ── signature: now-playing topic strip ─────────────────────────────── -->
+  <div id="nowplaying" class="nowplaying">
+    <span class="eyebrow np-label">now covering</span>
+    <span id="np-topic" class="np-topic">nothing yet — hit start</span>
+    <span id="np-bars" class="np-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+  </div>
+
+  <div id="paused-bar" class="paused-bar hidden">
+    <span>Capture paused — nothing is being transcribed.</span>
+    <button id="btn-resume-inline" class="paused-go" type="button">Resume</button>
+  </div>
+
+  <!-- ── tabs ───────────────────────────────────────────────────────────── -->
+  <nav class="tabs" role="tablist">
+    <button class="tab is-on" data-tab="live" role="tab" aria-selected="true">Live</button>
+    <button class="tab" data-tab="script" role="tab" aria-selected="false">Transcript</button>
+  </nav>
+
+  <!-- ── LIVE view ──────────────────────────────────────────────────────── -->
+  <main id="view-live" class="view" role="tabpanel">
+
+    <!-- ask answers stack in here, newest first -->
+    <div id="ask-stack"></div>
+
+    <!-- marked moments: what they said you'll be tested on, and where you got
+         lost. Hidden until there's something in it — an empty card here would
+         just be a permanent reminder that a feature exists. -->
+    <section class="card marked hidden" id="card-marked">
+      <div class="card-top">
+        <span class="eyebrow">marked</span>
+        <span id="marked-count" class="stamp">—</span>
+      </div>
+
+      <div id="pins-group" class="marked-group is-pin hidden">
+        <span class="eyebrow marked-label">don't miss</span>
+        <div id="pins-body" class="marked-rows"></div>
+      </div>
+
+      <div id="flags-group" class="marked-group is-flag hidden">
+        <span class="eyebrow marked-label">you flagged</span>
+        <div id="flags-body" class="marked-rows"></div>
+      </div>
+    </section>
+
+    <!-- catch me up -->
+    <section class="card hero" id="card-catchup">
+      <div class="card-top">
+        <span class="eyebrow">catch me up</span>
+        <span id="catchup-stamp" class="stamp">—</span>
+      </div>
+      <div id="catchup-body" class="recap">
+        <p class="empty">Zoned out? This stays current on its own, so there's
+          always something here to read.</p>
+      </div>
+      <div class="chips">
+        <span class="eyebrow chips-label">rewind</span>
+        <button class="chip" data-window="3">3 min</button>
+        <button class="chip" data-window="7">7 min</button>
+        <button class="chip" data-window="15">15 min</button>
+      </div>
+    </section>
+
+    <!-- questions to ask the prof -->
+    <section class="card accent" id="card-doubts">
+      <div class="card-top">
+        <span class="eyebrow accent-text">ask the prof</span>
+        <div class="card-tools">
+          <span id="doubts-count" class="stamp">—</span>
+          <button id="btn-requestion" class="icon-btn" type="button"
+                  title="Get different questions" aria-label="Get different questions">
+            <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+              <path d="M13.5 8a5.5 5.5 0 1 1-1.9-4.16M13.5 2v3.2h-3.2"
+                    fill="none" stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div id="doubts-nudge" class="nudge hidden">
+        <span class="nudge-dot" aria-hidden="true"></span>
+        <span id="doubts-nudge-text">They just asked for questions</span>
+      </div>
+      <div id="doubts-body">
+        <p class="empty">When they say "any doubts?", real questions from the
+          last few minutes show up here.</p>
+      </div>
+    </section>
+
+    <!-- terms -->
+    <section class="card" id="card-terms">
+      <div class="card-top">
+        <span class="eyebrow">new terms</span>
+      </div>
+      <div id="terms-body">
+        <p class="empty">Words you haven't heard before get defined here as
+          they're said.</p>
+      </div>
+    </section>
+
+    <!-- what the lecture is quietly assuming you already know -->
+    <section class="card hidden" id="card-assumed">
+      <div class="card-top">
+        <span class="eyebrow">assumed you knew</span>
+      </div>
+      <div id="assumed-body"></div>
+    </section>
+
+    <div id="panel-error" class="notice hidden"></div>
+  </main>
+
+  <!-- ── TRANSCRIPT view ────────────────────────────────────────────────── -->
+  <main id="view-script" class="view hidden" role="tabpanel">
+    <div class="script-top">
+      <span id="seg-count" class="eyebrow">0 lines</span>
+      <button id="btn-copy" class="ghost">Copy all</button>
+    </div>
+    <p class="script-hint">Tap a line to jump the video there, or its flag to mark it unclear. Select any text to have it explained.</p>
+    <div id="script-body" class="script">
+      <p class="empty">Nothing captured yet.</p>
+    </div>
+  </main>
+
+  <!-- ── selection actions ──────────────────────────────────────────────── -->
+  <div id="sel-bar" class="sel-bar hidden" role="toolbar" aria-label="Explain selection">
+    <span class="eyebrow sel-label">explain</span>
+    <button class="sel-btn" data-mode="simpler" type="button">simpler</button>
+    <button class="sel-btn" data-mode="deeper" type="button">deeper</button>
+  </div>
+
+  <!-- ── composer ───────────────────────────────────────────────────────── -->
+  <form id="composer" class="composer" autocomplete="off">
+    <button id="btn-flag" class="flag" type="button"
+            title="Lost me here (Alt+L) — marks the last ~45s to revisit"
+            aria-label="Mark this moment as unclear">
+      <svg id="ico-flag" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+        <path d="M4.2 2.4h7.6v11.2L8 10.7l-3.8 2.9z" fill="none"
+              stroke="currentColor" stroke-width="1.6"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <svg id="ico-flagged" viewBox="0 0 16 16" width="14" height="14" class="hidden" aria-hidden="true">
+        <path d="M3.4 8.4l3 3 6.2-7" fill="none" stroke="currentColor"
+              stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span id="flag-count" class="flag-count hidden">0</span>
+    </button>
+    <input id="ask-input" type="text" placeholder="wait, what did they just say about…"
+           aria-label="Ask about this lecture">
+    <button id="ask-send" class="send" type="submit" aria-label="Send question">
+      <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
+        <path d="M8 13V3M8 3L3.5 7.5M8 3l4.5 4.5" fill="none"
+              stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </form>
+
+  <script type="module" src="panel.js"></script>
+</body>
+</html>

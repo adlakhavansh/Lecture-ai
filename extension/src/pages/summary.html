@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lecture AI — Summary</title>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="summary.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 id="summary-title">Lecture Summary</h1>
+      <div class="header-actions">
+        <button id="btn-transcript" class="btn-sm">Transcript</button>
+        <button id="btn-copy" class="btn-sm">Copy</button>
+      </div>
+    </div>
+    <div id="summary-meta" class="meta"></div>
+    <div id="summary-content" class="content"></div>
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Generating summary…</p>
+    </div>
+    <div id="error-section" class="error-section hidden">
+      <p id="error-text"></p>
+      <button id="btn-retry" class="btn-sm">Retry summary</button>
+    </div>
+  </div>
+  <script type="module" src="summary.js"></script>
+</body>
+</html>

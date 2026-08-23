@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lecture AI</title>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body class="pop">
+
+  <div class="pop-head">
+    <div class="brand">
+      <span id="pulse" class="pulse is-idle" aria-hidden="true"></span>
+      <span class="brand-name">lecture<span class="brand-ai">ai</span></span>
+    </div>
+    <span id="timer" class="timer hidden">00:00</span>
+  </div>
+
+  <div id="setup-nudge" class="nudge hidden">
+    <span>No API keys yet — add them once and this runs without a server.</span>
+    <button id="btn-setup" class="nudge-go" type="button">Add keys</button>
+  </div>
+
+  <div class="state">
+    <div id="state-label" class="state-label">Ready when you are</div>
+    <div id="state-sub" class="state-sub">Open your lecture tab, then start.</div>
+  </div>
+
+  <button id="btn-primary" class="big">Start listening</button>
+
+  <!-- The reason the popup is worth opening mid-lecture: one tap, no panel. -->
+  <button id="btn-flag" class="wide flag-btn hidden" type="button"
+          title="Marks the last ~45 seconds as unclear, to re-explain later">
+    <span id="flag-label">Lost me here</span>
+    <span class="kbd">Alt+L</span>
+  </button>
+
+  <button id="btn-panel" class="wide">Open live panel</button>
+
+  <!-- Mini catch-me-up: the last recap, short enough to read standing up. -->
+  <section id="catchup" class="catchup hidden">
+    <div class="catchup-top">
+      <span class="eyebrow">where you are</span>
+      <span id="catchup-age" class="catchup-age"></span>
+    </div>
+    <p id="catchup-topic" class="catchup-topic hidden"></p>
+    <ul id="catchup-body" class="catchup-body"></ul>
+    <p id="catchup-more" class="catchup-more hidden"></p>
+  </section>
+
+  <div id="stats" class="stats hidden">
+    <div class="stat">
+      <span id="stat-lines" class="stat-n">0</span>
+      <span class="eyebrow">lines</span>
+    </div>
+    <div class="stat">
+      <span id="stat-flags" class="stat-n">0</span>
+      <span class="eyebrow">flagged</span>
+    </div>
+    <div class="stat">
+      <span id="stat-pins" class="stat-n">0</span>
+      <span class="eyebrow">to check</span>
+    </div>
+  </div>
+
+  <div id="post" class="post hidden">
+    <button id="btn-summary" class="wide hidden">Read summary</button>
+    <button id="btn-retry" class="link hidden">Summary failed — try again</button>
+  </div>
+
+  <div id="error" class="notice hidden"></div>
+
+  <nav class="links">
+    <button id="btn-history" class="link">Past lectures</button>
+    <span class="link-sep">·</span>
+    <button id="btn-settings" class="link">Keys &amp; setup</button>
+  </nav>
+
+  <div class="foot">
+    <div class="health">
+      <span id="health-dot" class="hdot" aria-hidden="true"></span>
+      <span id="health-text">Checking setup…</span>
+    </div>
+    <div class="foot-note">Audio is only read while you're listening.</div>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

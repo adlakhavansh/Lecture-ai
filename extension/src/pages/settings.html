@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lecture AI — Setup</title>
+  <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="settings.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="top">
+      <div>
+        <h1>Setup</h1>
+      </div>
+      <span id="saved" class="saved hidden">Saved</span>
+    </header>
+
+    <p class="lede">
+      Paste your own API keys and the extension runs on its own — no local server,
+      nothing else to install. Keys stay in this browser's extension storage and
+      are only ever sent to Deepgram and Google.
+    </p>
+
+    <!-- ── Keys ─────────────────────────────────────────────────────────── -->
+    <section class="card">
+      <div class="card-head">
+        <span class="eyebrow">Your keys</span>
+        <label class="switch">
+          <input type="checkbox" id="prefer-direct" />
+          <span>Use my keys directly</span>
+        </label>
+      </div>
+
+      <div class="field">
+        <label for="deepgram-key">Deepgram API key</label>
+        <div class="row">
+          <input type="password" id="deepgram-key" placeholder="Paste your Deepgram key" autocomplete="off" spellcheck="false" />
+          <button class="btn-ghost" data-reveal="deepgram-key" type="button">Show</button>
+        </div>
+        <p class="hint">
+          Speech-to-text. Free tier at <span class="mono">console.deepgram.com</span> covers hundreds of hours.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="gemini-key">Gemini API key</label>
+        <div class="row">
+          <input type="password" id="gemini-key" placeholder="Paste your Gemini key" autocomplete="off" spellcheck="false" />
+          <button class="btn-ghost" data-reveal="gemini-key" type="button">Show</button>
+        </div>
+        <p class="hint">
+          Recaps, questions and summaries. Free at <span class="mono">aistudio.google.com/apikey</span>.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="gemini-model">Model</label>
+        <input type="text" id="gemini-model" placeholder="gemini-3.6-flash" spellcheck="false" />
+        <p class="hint">A fast, cheap model is the right call here — insights run every 75 seconds.</p>
+      </div>
+
+      <div class="actions">
+        <button id="btn-test" class="btn" type="button">Test keys</button>
+        <span id="test-out" class="test-out"></span>
+      </div>
+    </section>
+
+    <!-- ── Course vocabulary ────────────────────────────────────────────── -->
+    <section class="card">
+      <span class="eyebrow">Course vocabulary</span>
+      <div class="field">
+        <label for="keywords">Terms to boost</label>
+        <textarea id="keywords" rows="4" spellcheck="false"
+          placeholder="Dijkstra, eigenvector, amortized, Bellman-Ford, NP-hard"></textarea>
+        <p class="hint">
+          Comma or line separated. This is the highest-value field on the page:
+          speech models mangle exactly the words your course cares about
+          ("Dijkstra" becomes "extra"), and boosting them fixes it. Add your
+          professor's name, the textbook's jargon, this week's topic.
+        </p>
+      </div>
+      <div id="kw-preview" class="chips"></div>
+    </section>
+
+    <!-- ── Output ───────────────────────────────────────────────────────── -->
+    <section class="card">
+      <span class="eyebrow">Output</span>
+      <div class="field">
+        <label for="language">Write everything in</label>
+        <select id="language"></select>
+        <p class="hint">
+          Independent of what the professor speaks. A Hinglish lecture can still
+          produce recaps in Hindi, Tamil or plain English.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── Fallback server ──────────────────────────────────────────────── -->
+    <section class="card">
+      <span class="eyebrow">Fallback server</span>
+      <div class="field">
+        <label for="backend-url">Proxy URL</label>
+        <input type="text" id="backend-url" placeholder="http://localhost:3001" spellcheck="false" />
+        <p class="hint">
+          Used only when the matching key above is blank, or when direct mode is
+          off. Keep it if you'd rather your keys lived server-side.
+        </p>
+      </div>
+      <div class="status-row">
+        <span id="route-transcribe" class="route"></span>
+        <span id="route-model" class="route"></span>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <button id="btn-save" class="btn btn-primary" type="button">Save</button>
+      <button id="btn-clear" class="btn-ghost danger" type="button">Clear keys</button>
+    </footer>
+  </main>
+
+  <script type="module" src="settings.js"></script>
+</body>
+</html>

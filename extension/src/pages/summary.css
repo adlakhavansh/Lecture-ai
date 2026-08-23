@@ -1,0 +1,383 @@
+/* Summary page — a reading surface. Wider measure, quieter chrome,
+   same palette as the panel so the product feels like one thing. */
+
+body {
+  font-size: 14px;
+  padding: 0;
+}
+
+.container {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 52px 28px 96px;
+}
+
+/* ── header ───────────────────────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--hair);
+  margin-bottom: 8px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 38px;
+  font-weight: 400;
+  letter-spacing: -0.032em;
+  line-height: 1.08;
+  color: var(--paper);
+}
+
+.btn-sm {
+  border: 0;
+  border-radius: var(--r-sm);
+  padding: 7px 14px;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 550;
+  letter-spacing: -0.005em;
+  color: var(--muted);
+  background: var(--ink-2);
+  box-shadow: inset 0 0 0 1px var(--hair);
+  transition: color 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+}
+.btn-sm:hover { color: var(--paper); background: var(--ink-3); }
+
+.header-actions { display: flex; gap: 8px; flex: 0 0 auto; }
+
+.meta {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-bottom: 34px;
+}
+
+/* ── content ──────────────────────────────────────────────────────────────── */
+
+.content { color: #ded9ee; }
+
+.content h2 {
+  font-size: 19px;
+  font-weight: 560;
+  letter-spacing: -0.02em;
+  color: var(--paper);
+  margin: 40px 0 12px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--hair);
+}
+.content h2:first-child { margin-top: 0; }
+
+.content p {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.68;
+  letter-spacing: -0.008em;
+}
+.content p:empty { display: none; }
+
+.content strong { color: var(--paper); font-weight: 620; }
+
+.content ul {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 9px;
+}
+
+.content li {
+  position: relative;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.62;
+  letter-spacing: -0.008em;
+}
+.content li::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 9px;
+  width: 5px; height: 5px;
+  border-radius: 99px;
+  background: var(--lilac);
+  opacity: 0.8;
+}
+
+/* ── structured sections ──────────────────────────────────────────────────── */
+
+/* Each section is its own block with a rule above it, so the page can be
+   skimmed by heading. Sections with nothing real to say are omitted entirely
+   rather than rendered empty — a padded study doc teaches you to distrust it. */
+
+.sec { margin-bottom: 34px; }
+.sec:last-child { margin-bottom: 0; }
+
+/* The opening paragraph earns a larger measure — it's the one part someone
+   reads in full before deciding whether to read the rest. */
+.tldr h2 { color: var(--mint); }
+.tldr p {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--paper);
+  letter-spacing: -0.015em;
+}
+
+/* Key points — numbered, because "the 5 things from today" is how people
+   actually recall a lecture. */
+.keypoints ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: kp;
+  display: grid;
+  gap: 11px;
+}
+
+.keypoints li {
+  counter-increment: kp;
+  position: relative;
+  padding-left: 30px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  letter-spacing: -0.008em;
+  color: var(--paper);
+}
+
+.keypoints li::before {
+  content: counter(kp);
+  position: absolute;
+  left: 0;
+  top: 1px;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 99px;
+  background: var(--lilac-sub);
+  color: var(--lilac);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Topic walk-through */
+.topics { display: grid; gap: 20px; }
+
+.topic h3 {
+  margin: 0 0 5px;
+  font-size: 14.5px;
+  font-weight: 640;
+  letter-spacing: -0.015em;
+  color: var(--paper);
+}
+
+.topic p { margin: 0; }
+
+/* What the professor flagged — butter, the same colour the panel reserves for
+   "this needs your attention". */
+.stress h2 { color: var(--butter); }
+.stress ul { gap: 10px; }
+.stress li::before { background: var(--butter); }
+
+.open h2 { color: var(--coral); }
+.open li::before { background: var(--coral); }
+
+.revise h2 { color: var(--mint); }
+.revise li::before { background: var(--mint); }
+
+/* Formulas get monospace and a surface: they are quoted objects, not prose. */
+.formulas { display: grid; gap: 8px; }
+
+.formulas code {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.55;
+  background: var(--ink-2);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  color: #e6e1f5;
+  overflow-wrap: anywhere;
+}
+
+/* Terms as a definition list — term left, meaning right, aligned so the page
+   can be scanned down the term column. */
+.terms {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 150px) minmax(0, 1fr);
+  gap: 9px 16px;
+  align-items: baseline;
+}
+
+.terms dt {
+  font-size: 13px;
+  font-weight: 620;
+  color: var(--lilac);
+  overflow-wrap: anywhere;
+}
+
+.terms dd {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 520px) {
+  .terms { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+  .terms dd { margin-bottom: 10px; }
+}
+
+/* ── marked moments ───────────────────────────────────────────────────────── */
+
+/* These two sections lead the page and have to read as a different kind of
+   thing from the sections below: not the model's account of the lecture, but a
+   record of what you marked and what the professor actually said. So they get a
+   contained panel with a coloured edge, where everything below is open prose on
+   the page ground.
+
+   Outlined, not filled. A solid butter or lilac block at the top of a reading
+   surface fights the text for attention every time you scroll past it, and this
+   is a document you come back to. */
+
+.marks {
+  border-radius: var(--r);
+  border: 1px solid var(--hair);
+  border-left-width: 2px;
+  padding: 18px 20px 20px;
+  background: var(--ink-2);
+}
+
+.marks.flagged  { border-left-color: var(--lilac); }
+.marks.dontmiss { border-left-color: var(--butter); }
+
+.marks-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 4px;
+}
+
+/* The section heading rule would cut the panel in half, so it goes. */
+.marks h2 {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 17px;
+}
+.marks.flagged h2  { color: var(--lilac); }
+.marks.dontmiss h2 { color: var(--butter); }
+
+.marks-lede {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--faint);
+  letter-spacing: -0.005em;
+}
+
+.mark-list { display: grid; gap: 12px; }
+
+.mark {
+  border-radius: var(--r-sm);
+  background: rgba(18, 16, 28, 0.55);
+  border: 1px solid var(--hair);
+  padding: 11px 13px 12px;
+}
+
+.mark-head {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  margin-bottom: 6px;
+}
+
+.mark-t {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.flagged  .mark-t { color: var(--lilac); }
+.dontmiss .mark-t { color: var(--butter); }
+
+.mark-src {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+/* What was said stays quoted and quieter than the explanation — you're here for
+   the answer, the quote is only there to locate you. */
+.mark-said {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  letter-spacing: -0.005em;
+  padding-left: 10px;
+  border-left: 1px solid var(--hair-2);
+  overflow-wrap: anywhere;
+}
+
+.mark-ex {
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--paper);
+  letter-spacing: -0.008em;
+}
+.mark-ex.is-empty { color: var(--faint); font-size: 12px; }
+
+/* ── loading ──────────────────────────────────────────────────────────────── */
+
+.loading {
+  display: grid;
+  place-items: center;
+  gap: 16px;
+  padding: 64px 0;
+  color: var(--faint);
+}
+.loading p { margin: 0; font-size: 12.5px; }
+
+.spinner {
+  width: 22px; height: 22px;
+  border-radius: 99px;
+  border: 2px solid var(--ink-3);
+  border-top-color: var(--lilac);
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── error ────────────────────────────────────────────────────────────────── */
+
+.error-section {
+  border-radius: var(--r);
+  background: var(--coral-sub);
+  box-shadow: inset 0 0 0 1px rgba(255, 139, 123, 0.28);
+  padding: 16px 18px;
+  margin-top: 24px;
+}
+.error-section p {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--coral);
+}
+
+@media (max-width: 560px) {
+  .container { padding: 32px 18px 64px; }
+  .header h1 { font-size: 28px; }
+}

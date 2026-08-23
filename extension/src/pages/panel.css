@@ -1,0 +1,845 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Side panel — the live assistant surface.
+   Layout: fixed bar + now-playing strip + tabs, scrolling card column,
+   bottom-docked composer. Everything is glanceable in one pass.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+html, body { height: 100%; }
+
+body.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  font-size: 13px;
+}
+
+/* ── top bar ──────────────────────────────────────────────────────────────── */
+
+.bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 14px 11px;
+  background: var(--ink);
+}
+
+.brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
+
+.brand-name {
+  font-size: 14px;
+  font-weight: 620;
+  letter-spacing: -0.032em;   /* tight tracking does the personality work */
+  color: var(--paper);
+}
+.brand-ai {
+  color: var(--lilac);
+  margin-left: 1.5px;
+}
+
+/* breathing dot — the only ambient motion in the UI */
+.pulse {
+  width: 8px; height: 8px;
+  border-radius: 99px;
+  background: var(--faint);
+  flex: 0 0 auto;
+  position: relative;
+}
+.pulse.is-live {
+  background: var(--mint);
+  animation: breathe 2.1s ease-in-out infinite;
+}
+.pulse.is-live::after {
+  content: "";
+  position: absolute; inset: -4px;
+  border-radius: 99px;
+  border: 1px solid var(--mint);
+  opacity: 0.35;
+  animation: halo 2.1s ease-in-out infinite;
+}
+.pulse.is-work { background: var(--butter); animation: breathe 1s ease-in-out infinite; }
+/* Paused: held, not working, not dead. Butter without the pulse reads as "on
+   hold" rather than "in progress". */
+.pulse.is-hold { background: var(--butter); opacity: 0.7; }
+.pulse.is-bad  { background: var(--coral); }
+
+@keyframes breathe {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.45; }
+}
+@keyframes halo {
+  0%       { transform: scale(0.8); opacity: 0.4; }
+  70%      { transform: scale(1.5); opacity: 0; }
+  100%     { transform: scale(1.5); opacity: 0; }
+}
+
+.bar-right { display: flex; align-items: center; gap: 9px; }
+
+.timer {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+
+.pill {
+  border: 0;
+  border-radius: 99px;
+  padding: 6px 15px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  background: var(--lilac);
+  color: #17122b;
+  transition: filter 0.15s ease, background 0.15s ease;
+}
+.pill:hover { filter: brightness(1.08); }
+.pill:active { transform: translateY(0.5px); }
+.pill.is-stop {
+  background: transparent;
+  color: var(--coral);
+  box-shadow: inset 0 0 0 1px var(--coral-sub), inset 0 0 0 1px rgba(255,139,123,0.4);
+}
+.pill.is-stop:hover { background: var(--coral-sub); }
+.pill:disabled { opacity: 0.45; pointer-events: none; }
+
+/* ── now-playing strip (signature element) ────────────────────────────────── */
+
+.nowplaying {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 14px 12px;
+  padding: 9px 12px;
+  border-radius: var(--r);
+  background: linear-gradient(100deg, var(--lilac-sub), rgba(185,165,255,0.03));
+  box-shadow: inset 0 0 0 1px var(--hair);
+  min-width: 0;
+}
+
+.np-label { flex: 0 0 auto; color: var(--lilac); opacity: 0.75; }
+
+.np-topic {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 550;
+  letter-spacing: -0.015em;
+  color: var(--paper);
+  /* Two lines beats an ellipsis here — the topic is the one thing you read at
+     a glance, and "Indian Education Spending an…" tells you nothing. */
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.nowplaying.is-waiting .np-topic { color: var(--faint); font-weight: 450; }
+
+/* four little equaliser bars — reads as "audio is flowing" */
+.np-bars { display: flex; align-items: flex-end; gap: 2px; height: 12px; flex: 0 0 auto; }
+.np-bars i {
+  width: 2px;
+  border-radius: 1px;
+  background: var(--lilac);
+  height: 3px;
+  opacity: 0.3;
+}
+/* Driven by --lvl (0..1), pushed from the offscreen analyser every ~120ms.
+   Each bar gets its own weighting so the group reads as a waveform rather than
+   four identical blocks, and the transition smooths the sampling interval. */
+.np-bars i {
+  height: 12px;
+  transform: scaleY(calc(0.25 + (var(--lvl, 0) * var(--w, 1)) * 0.75));
+  transform-origin: 50% 100%;
+  transition: transform 0.11s ease-out, opacity 0.2s ease;
+  will-change: transform;
+}
+.np-bars i:nth-child(1) { --w: 0.62; }
+.np-bars i:nth-child(2) { --w: 1;    }
+.np-bars i:nth-child(3) { --w: 0.78; }
+.np-bars i:nth-child(4) { --w: 0.45; }
+
+.np-bars.is-hot i { opacity: 0.95; }
+
+/* No signal while we're supposed to be live is worth noticing, not hiding. */
+.nowplaying.is-on .np-bars i { opacity: 0.42; }
+.nowplaying.is-on .np-bars.is-hot i { opacity: 0.95; }
+
+/* ── paused banner ────────────────────────────────────────────────────────── */
+
+.paused-bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--butter-sub);
+  border-bottom: 1px solid rgba(255, 217, 116, 0.2);
+  font-size: 11.5px;
+  color: var(--butter);
+}
+
+.paused-go {
+  border: 1px solid rgba(255, 217, 116, 0.4);
+  background: none;
+  color: var(--butter);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 550;
+  letter-spacing: -0.005em;
+  padding: 4px 11px;
+  border-radius: var(--r-sm);
+  flex: 0 0 auto;
+}
+
+.paused-go:hover { background: rgba(255, 217, 116, 0.16); }
+
+/* ── tabs ─────────────────────────────────────────────────────────────────── */
+
+.tabs {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 2px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--hair);
+}
+
+.tab {
+  border: 0;
+  background: none;
+  padding: 7px 2px 9px;
+  margin-right: 16px;
+  font-size: 12px;
+  font-weight: 550;
+  letter-spacing: -0.01em;
+  color: var(--faint);
+  position: relative;
+  transition: color 0.15s ease;
+}
+.tab:hover { color: var(--muted); }
+.tab.is-on { color: var(--paper); }
+.tab.is-on::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 1.5px;
+  background: var(--lilac);
+  border-radius: 2px;
+}
+
+/* ── views ────────────────────────────────────────────────────────────────── */
+
+.view {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── cards ────────────────────────────────────────────────────────────────── */
+
+.card {
+  border-radius: var(--r);
+  background: var(--ink-2);
+  box-shadow: inset 0 0 0 1px var(--hair);
+  padding: 12px 13px 13px;
+  /* Flex children default to min-width:auto, which lets long content push a
+     card wider than the column. Every card opts out. */
+  min-width: 0;
+  animation: rise 0.28s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.card.hero {
+  background: var(--ink-2);
+  box-shadow: inset 0 0 0 1px var(--hair-2);
+}
+
+.card.accent {
+  background: linear-gradient(168deg, var(--butter-sub), rgba(255,217,116,0.02));
+  box-shadow: inset 0 0 0 1px rgba(255, 217, 116, 0.19);
+}
+.accent-text { color: var(--butter); opacity: 0.9; }
+
+.card-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+
+.empty {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--faint);
+  letter-spacing: -0.005em;
+}
+
+/* recap bullets — hanging lilac markers, no list bullets */
+.recap { margin: 0; }
+.recap ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.recap li {
+  position: relative;
+  padding-left: 14px;
+  font-size: 12.5px;
+  line-height: 1.52;
+  letter-spacing: -0.008em;
+  color: #ded9ee;
+}
+.recap li::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 7px;
+  width: 5px; height: 5px;
+  border-radius: 99px;
+  background: var(--lilac);
+  opacity: 0.85;
+}
+
+/* rewind chips */
+.chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px solid var(--hair);
+}
+.chips-label { margin-right: 2px; }
+.chip {
+  border: 0;
+  border-radius: 99px;
+  padding: 4px 10px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  background: var(--ink-3);
+  transition: color 0.14s ease, background 0.14s ease;
+}
+.chip:hover { color: var(--paper); background: #322c47; }
+.chip.is-busy { color: var(--lilac); }
+
+/* questions to ask */
+.qlist { display: grid; gap: 9px; }
+
+.q {
+  display: grid;
+  /* minmax(0,…) matters: a grid track defaults to min-content, so one long
+     unbreakable string used to force the whole card wider than its siblings
+     and push the text out past the panel edge. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  padding: 9px 10px;
+  border-radius: var(--r-sm);
+  background: rgba(18, 16, 28, 0.5);
+  box-shadow: inset 0 0 0 1px var(--hair);
+}
+.q-text {
+  font-size: 12.5px;
+  line-height: 1.48;
+  font-weight: 500;
+  letter-spacing: -0.008em;
+  color: #f2eeff;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.q-foot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+.q-basis {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  line-height: 1.4;
+  color: var(--faint);
+  flex: 1 1 auto;
+  min-width: 0;
+  /* Wrap to two lines instead of a single clipped line — the quote is the
+     evidence for the question, so it has to be readable. */
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.q-copy {
+  flex: 0 0 auto;
+  border: 0;
+  background: none;
+  padding: 2px 4px;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  font-weight: 550;
+  letter-spacing: -0.005em;
+  color: var(--faint);
+  transition: color 0.14s ease;
+}
+.q-copy:hover { color: var(--butter); }
+
+/* ── card tools (refresh) ─────────────────────────────────────────────────── */
+
+.card-tools { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; }
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 20px; height: 20px;
+  border: 0;
+  border-radius: 99px;
+  background: none;
+  color: var(--faint);
+  transition: color 0.14s ease, background 0.14s ease;
+}
+.icon-btn:hover { color: var(--butter); background: rgba(255, 217, 116, 0.1); }
+.icon-btn.is-busy { color: var(--butter); animation: spin 0.85s linear infinite; }
+.icon-btn:disabled { opacity: 0.4; pointer-events: none; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── "they just asked for questions" nudge ────────────────────────────────── */
+
+/* The moment the whole product exists for. Loud enough to catch a drifting
+   eye, quiet enough not to look like an error. */
+.nudge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: -2px 0 9px;
+  padding: 6px 9px;
+  border-radius: var(--r-sm);
+  background: rgba(255, 217, 116, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(255, 217, 116, 0.3);
+  font-size: 11.5px;
+  font-weight: 550;
+  letter-spacing: -0.005em;
+  color: var(--butter);
+}
+.nudge-dot {
+  width: 6px; height: 6px;
+  border-radius: 99px;
+  background: var(--butter);
+  flex: 0 0 auto;
+  animation: breathe 1.1s ease-in-out infinite;
+}
+
+#card-doubts.is-alert {
+  animation: flare 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) 2;
+  box-shadow: inset 0 0 0 1px rgba(255, 217, 116, 0.5),
+              0 0 0 3px rgba(255, 217, 116, 0.09);
+}
+
+@keyframes flare {
+  0%, 100% { box-shadow: inset 0 0 0 1px rgba(255,217,116,0.5), 0 0 0 3px rgba(255,217,116,0.09); }
+  50%      { box-shadow: inset 0 0 0 1px rgba(255,217,116,0.85), 0 0 0 7px rgba(255,217,116,0.16); }
+}
+
+/* ── marked moments ───────────────────────────────────────────────────────── */
+
+/* One card, two kinds of mark. They share a container because they answer the
+   same question — "what do I come back to?" — and splitting them into two cards
+   would double the chrome to hold six words of content.
+
+   Neither group gets a filled ground: the doubts card already owns solid butter,
+   and a second filled card would flatten the panel's one deliberate emphasis
+   into noise. Outline plus a coloured label carries the distinction at a glance
+   without competing. */
+
+.marked-group { display: grid; gap: 6px; }
+.marked-group + .marked-group {
+  margin-top: 11px;
+  padding-top: 11px;
+  border-top: 1px solid var(--hair);
+}
+
+.marked-label { opacity: 0.9; }
+.is-pin  .marked-label { color: var(--butter); }
+.is-flag .marked-label { color: var(--lilac); }
+
+.marked-rows { display: grid; gap: 6px; }
+
+/* Time column is fixed and tabular so the rows read as a list of moments —
+   the timestamps line up and the eye can run straight down them. */
+.mark {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: baseline;
+  min-width: 0;
+  padding: 6px 8px;
+  border-radius: var(--r-sm);
+  background: rgba(18, 16, 28, 0.5);
+}
+.is-pin  .mark { box-shadow: inset 0 0 0 1px rgba(255, 217, 116, 0.22); }
+.is-flag .mark { box-shadow: inset 0 0 0 1px rgba(185, 165, 255, 0.22); }
+
+.mark-t {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--faint);
+}
+.is-pin  .mark-t { color: rgba(255, 217, 116, 0.7); }
+.is-flag .mark-t { color: rgba(185, 165, 255, 0.7); }
+
+.mark-x {
+  font-size: 12px;
+  line-height: 1.45;
+  letter-spacing: -0.008em;
+  color: #d6d1e8;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  /* Three lines is enough to recognise the moment; the full text is in the
+     transcript and the summary, so clamping here costs nothing. */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.mark-x em {
+  font-style: normal;
+  color: var(--butter);
+  font-weight: 600;
+}
+
+.mark-undo {
+  border: 0;
+  background: none;
+  padding: 0 2px;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--faint);
+  transition: color 0.14s ease;
+}
+.mark-undo:hover { color: var(--coral); }
+
+/* A pinned deadline arriving mid-lecture is worth one glance. Same flare the
+   doubts card uses, borrowed rather than reinvented so the two loud moments in
+   this panel look like the same language. */
+#card-marked.is-alert {
+  animation: flare 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) 2;
+  box-shadow: inset 0 0 0 1px rgba(255, 217, 116, 0.5),
+              0 0 0 3px rgba(255, 217, 116, 0.09);
+}
+
+/* terms */
+.terms { display: grid; gap: 8px; }
+.term-row { display: grid; gap: 2px; }
+.term-name {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--lilac);
+}
+.term-def {
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+/* ── ask answers ──────────────────────────────────────────────────────────── */
+
+#ask-stack { display: grid; gap: 10px; }
+
+.answer {
+  border-radius: var(--r);
+  background: var(--ink-2);
+  box-shadow: inset 0 0 0 1px rgba(185, 165, 255, 0.24);
+  padding: 11px 13px 12px;
+  animation: rise 0.28s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+.answer-q {
+  display: flex;
+  gap: 7px;
+  align-items: baseline;
+  margin-bottom: 7px;
+}
+.answer-q .eyebrow { flex: 0 0 auto; color: var(--lilac); opacity: 0.8; }
+.answer-q span:last-child {
+  font-size: 11.5px;
+  color: var(--muted);
+  letter-spacing: -0.005em;
+}
+.answer-a {
+  font-size: 12.5px;
+  line-height: 1.55;
+  letter-spacing: -0.008em;
+  color: #ded9ee;
+  white-space: pre-wrap;
+}
+.answer-close {
+  border: 0; background: none;
+  color: var(--faint);
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+.answer-close:hover { color: var(--paper); }
+
+/* loading shimmer for pending content */
+.shimmer {
+  height: 9px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--ink-3) 0%, #332d4a 40%, var(--ink-3) 80%);
+  background-size: 220% 100%;
+  animation: sweep 1.15s ease-in-out infinite;
+}
+.shimmer + .shimmer { margin-top: 7px; }
+.shimmer.w80 { width: 80%; }
+.shimmer.w60 { width: 60%; }
+
+@keyframes sweep {
+  from { background-position: 120% 0; }
+  to   { background-position: -60% 0; }
+}
+
+/* ── transcript view ──────────────────────────────────────────────────────── */
+
+.script-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ghost {
+  border: 0;
+  background: none;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 550;
+  letter-spacing: -0.005em;
+  color: var(--faint);
+  padding: 2px 0;
+  transition: color 0.14s ease;
+}
+.ghost:hover { color: var(--lilac); }
+
+.script { display: grid; gap: 9px; }
+.script-hint {
+  margin: 8px 0 2px;
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: var(--faint);
+}
+
+.line {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) 18px;
+  gap: 9px;
+  align-items: baseline;
+  min-width: 0;
+  padding: 3px 6px;
+  margin: 0 -6px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.line:hover { background: var(--lilac-sub); }
+.line:hover .line-t { color: var(--lilac); }
+
+/* Flagging a line is a deliberate second action on a row whose primary action is
+   "jump the video here", so it stays out of the way until the row is hovered. */
+.line-flag {
+  border: 0;
+  background: none;
+  padding: 0;
+  width: 18px;
+  display: grid;
+  place-items: center;
+  color: var(--faint);
+  opacity: 0;
+  transition: opacity 0.13s ease, color 0.13s ease;
+}
+.line:hover .line-flag,
+.line:focus-within .line-flag { opacity: 1; }
+.line-flag:hover { color: var(--lilac); }
+
+/* A flagged line keeps its mark with no hover needed — the point is to find it
+   again while scrolling. */
+.line.is-flagged { background: var(--lilac-sub); }
+.line.is-flagged .line-flag { opacity: 1; color: var(--lilac); }
+.line.is-flagged .line-flag svg path { fill: currentColor; }
+.line.is-flagged .line-x { color: var(--paper); }
+
+/* Brief confirmation that the click landed, since the video is in another tab. */
+.line.is-seeking { background: rgba(185, 165, 255, 0.22); }
+.line-t {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+  padding-top: 2px;
+}
+.line-x {
+  font-size: 12.5px;
+  line-height: 1.5;
+  letter-spacing: -0.008em;
+  color: #d6d1e8;
+}
+.line:last-child .line-x { color: var(--paper); }
+
+/* ── selection toolbar ────────────────────────────────────────────────────── */
+
+/* Floats over the content at the selection, rather than living in a corner —
+   the action belongs next to the thing it acts on. */
+.sel-bar {
+  position: fixed;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 99px;
+  background: #2b2440;
+  border: 1px solid var(--hair-2);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+  animation: rise 0.12s ease-out;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.sel-label { color: var(--faint); }
+
+.sel-btn {
+  border: 0;
+  background: var(--lilac-sub);
+  color: var(--lilac);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 550;
+  letter-spacing: -0.005em;
+  padding: 5px 11px;
+  border-radius: var(--r-sm);
+  transition: background 0.13s ease, color 0.13s ease;
+}
+
+.sel-btn:hover { background: rgba(185, 165, 255, 0.26); color: #d9cfff; }
+
+/* ── notice ───────────────────────────────────────────────────────────────── */
+
+.notice {
+  border-radius: var(--r-sm);
+  background: var(--coral-sub);
+  box-shadow: inset 0 0 0 1px rgba(255, 139, 123, 0.28);
+  padding: 9px 11px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--coral);
+}
+
+/* ── composer ─────────────────────────────────────────────────────────────── */
+
+.composer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px 13px;
+  background: var(--ink);
+  border-top: 1px solid var(--hair);
+}
+
+/* "Lost me here" — the cheapest possible way to say the one thing no model can
+   infer for you. It sits in the composer because that's the bar you already look
+   at when you don't understand something, and it's outlined rather than filled so
+   it reads as available all lecture without shouting over the send button. */
+.flag {
+  position: relative;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 32px; height: 32px;
+  border: 0;
+  border-radius: 99px;
+  background: var(--ink-2);
+  box-shadow: inset 0 0 0 1px var(--hair);
+  color: var(--faint);
+  transition: color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+.flag:hover {
+  color: var(--lilac);
+  background: var(--lilac-sub);
+  box-shadow: inset 0 0 0 1px rgba(185, 165, 255, 0.35);
+}
+.flag:disabled { opacity: 0.4; pointer-events: none; }
+
+/* Confirmation has to land in under a second — the lecture hasn't stopped. */
+.flag.is-done {
+  color: var(--mint);
+  background: var(--mint-sub);
+  box-shadow: inset 0 0 0 1px rgba(126, 231, 178, 0.4);
+}
+
+/* Count rides the button so "3 marked" is visible without a card open. */
+.flag-count {
+  position: absolute;
+  top: -2px; right: -3px;
+  min-width: 14px;
+  padding: 0 3px;
+  border-radius: 99px;
+  background: var(--lilac);
+  color: #17122b;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  line-height: 14px;
+  text-align: center;
+}
+
+#ask-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  border-radius: 99px;
+  padding: 9px 14px;
+  font-size: 12.5px;
+  letter-spacing: -0.008em;
+  color: var(--paper);
+  background: var(--ink-2);
+  box-shadow: inset 0 0 0 1px var(--hair);
+  transition: box-shadow 0.16s ease;
+}
+#ask-input::placeholder { color: var(--faint); }
+#ask-input:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 1px rgba(185, 165, 255, 0.45);
+}
+
+.send {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 32px; height: 32px;
+  border: 0;
+  border-radius: 99px;
+  background: var(--lilac);
+  color: #17122b;
+  transition: filter 0.15s ease, opacity 0.15s ease;
+}
+.send:hover { filter: brightness(1.08); }
+.send:disabled { opacity: 0.4; pointer-events: none; }

@@ -1,0 +1,155 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Lecture AI — design tokens
+   Direction: "night study session". Deep aubergine ground (not pure black),
+   lilac as the voice of the product, butter yellow reserved for the one thing
+   that needs your attention (questions to ask), mint only for "we're live".
+   Type personality comes from tight display tracking + wide-tracked mono
+   micro-labels, since extension pages can't load webfonts.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ground */
+  --ink:      #12101c;
+  --ink-2:    #1b1828;
+  --ink-3:    #262137;
+  --hair:     rgba(237, 234, 246, 0.09);
+  --hair-2:   rgba(237, 234, 246, 0.16);
+
+  /* voice */
+  --lilac:    #b9a5ff;
+  --lilac-2:  #8f74ff;
+  --lilac-sub: rgba(185, 165, 255, 0.13);
+
+  /* attention */
+  --butter:   #ffd974;
+  --butter-sub: rgba(255, 217, 116, 0.12);
+
+  /* live */
+  --mint:     #7be8c0;
+  --mint-sub: rgba(123, 232, 192, 0.13);
+
+  /* trouble */
+  --coral:    #ff8b7b;
+  --coral-sub: rgba(255, 139, 123, 0.12);
+
+  /* text */
+  --paper:    #edeaf6;
+  --muted:    #8e88a8;
+  --faint:    #5f5980;
+
+  /* type */
+  --sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, "JetBrains Mono",
+          "Cascadia Code", Menlo, Consolas, monospace;
+
+  /* geometry — corners are nearly square. Soft rounded cards are the single
+     most templated shape on the web; a 4px corner still reads as a made object
+     without reading as a UI kit. Pills stay pills, but only for things that are
+     genuinely chips or toggles. */
+  --r-sm: 3px;
+  --r:    4px;
+  --r-lg: 6px;
+
+  /* reading measure — prose sits at ~68 characters. Wider than ~75ch and the
+     eye loses the line return; our pages were running past 95ch. */
+  --measure: 34rem;
+
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── shared primitives ─────────────────────────────────────────────────────── */
+
+/* wide-tracked mono micro-label — the structural device of the whole UI */
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.stamp {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+button { font-family: inherit; cursor: pointer; }
+
+button:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--lilac);
+  outline-offset: 2px;
+}
+
+.hidden { display: none !important; }
+
+/* ── browser surfaces ──────────────────────────────────────────────────────
+   The parts we didn't draw still carry the design. Selection, caret, scrollbar
+   and underline all ship with defaults that belong to no design system, and
+   leaving them is the clearest tell that a page was assembled rather than
+   built. Selection matters most here: highlight-to-explain means the student
+   drags across transcript text constantly, so a default browser blue would be
+   the most-seen colour in the product. */
+
+::selection {
+  background: rgba(185, 165, 255, 0.28);
+  color: #fff;
+}
+
+input, textarea {
+  caret-color: var(--lilac);
+}
+
+a {
+  color: var(--lilac);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+  text-decoration-color: rgba(185, 165, 255, 0.4);
+  transition: text-decoration-color 0.15s ease;
+}
+
+a:hover { text-decoration-color: var(--lilac); }
+
+/* Light text on a dark ground needs compensating on all three axes — a touch
+   more leading, a touch more tracking, and one step more weight — because the
+   glyphs optically bloom against the background. Applied to prose only; the
+   display sizes still want tight tracking. */
+.prose {
+  max-width: var(--measure);
+  letter-spacing: 0.004em;
+  line-height: 1.68;
+}
+
+/* thin, unobtrusive scrollbars */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--ink-3);
+  border-radius: 99px;
+  border: 2px solid var(--ink);
+}
+::-webkit-scrollbar-thumb:hover { background: #322c47; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,179 @@
+/* Transcript page — a long reading surface. Same palette as the panel; the
+   difference is measure and breathing room, since this is where someone scrolls
+   back through an hour of lecture rather than glancing at the last minute. */
+
+body {
+  font-size: 14px;
+  padding: 0;
+}
+
+.container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 44px 28px 96px;
+}
+
+/* ── header ───────────────────────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--hair);
+  margin-bottom: 26px;
+  position: sticky;
+  top: 0;
+  background: var(--ink);
+  padding-top: 8px;
+  z-index: 5;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+  border: 1px solid var(--hair);
+  border-radius: 99px;
+  padding: 5px 10px;
+  white-space: nowrap;
+}
+
+.badge.is-flag {
+  color: var(--lilac);
+  border-color: rgba(185, 165, 255, 0.35);
+}
+
+.hint {
+  margin: -18px 0 22px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--faint);
+}
+
+.btn-sm {
+  border: 0;
+  border-radius: var(--r-sm);
+  padding: 7px 14px;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 550;
+  letter-spacing: -0.005em;
+  color: var(--muted);
+  background: var(--ink-2);
+  box-shadow: inset 0 0 0 1px var(--hair);
+  transition: color 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-sm:hover { color: var(--paper); background: var(--ink-3); }
+
+/* ── transcript ───────────────────────────────────────────────────────────── */
+
+.transcript { display: grid; gap: 2px; }
+
+/* Timestamp in a fixed gutter so the text column stays a straight edge — an
+   hour of ragged left margin is genuinely harder to read. */
+.segment {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 20px;
+  gap: 14px;
+  align-items: baseline;
+  min-width: 0;
+  padding: 7px 10px;
+  margin: 0 -10px;
+  border-radius: var(--r-sm);
+  /* Left edge is where the marks live, so the border exists on every row and
+     only changes colour — otherwise flagging a line would shift the text. */
+  border-left: 2px solid transparent;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.segment:hover { background: var(--ink-2); }
+
+/* ── marks ────────────────────────────────────────────────────────────────── */
+
+/* Two different claims about a line, so two different colours: lilac is "I
+   didn't follow this" (mine), butter is "this is going to be assessed" (theirs).
+   Both live on the left edge rather than in the text, so an hour of transcript
+   still scans as one column. */
+.segment-flag {
+  border: 0;
+  background: none;
+  padding: 0;
+  width: 20px;
+  display: grid;
+  place-items: center;
+  color: var(--faint);
+  opacity: 0;
+  transition: opacity 0.13s ease, color 0.13s ease;
+}
+.segment:hover .segment-flag,
+.segment:focus-within .segment-flag { opacity: 1; }
+.segment-flag:hover { color: var(--lilac); }
+
+.segment.is-flagged {
+  border-left-color: var(--lilac);
+  background: var(--lilac-sub);
+}
+.segment.is-flagged .segment-flag { opacity: 1; color: var(--lilac); }
+.segment.is-flagged .segment-flag svg path { fill: currentColor; }
+.segment.is-flagged .segment-text { color: var(--paper); }
+
+.segment.is-pinned { border-left-color: var(--butter); }
+.segment.is-pinned .segment-time { color: var(--butter); }
+
+.segment-time {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.segment:hover .segment-time { color: var(--lilac); }
+
+.segment-text {
+  font-size: 14.5px;
+  line-height: 1.65;
+  letter-spacing: -0.008em;
+  color: #ded9ee;
+  overflow-wrap: anywhere;
+}
+
+/* The newest line is the one you're actually reading during a live lecture. */
+.segment:last-child .segment-text { color: var(--paper); }
+
+/* ── empty ────────────────────────────────────────────────────────────────── */
+
+.empty {
+  text-align: center;
+  padding: 72px 20px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+@media (max-width: 560px) {
+  .container { padding: 28px 18px 64px; }
+  .header h1 { font-size: 25px; }
+  .segment { grid-template-columns: 52px minmax(0, 1fr) 20px; gap: 10px; }
+}

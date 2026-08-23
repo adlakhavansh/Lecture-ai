@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lecture AI — History</title>
+  <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="history.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="top">
+      <div>
+        <h1>Your lectures</h1>
+      </div>
+      <div class="top-actions">
+        <input type="search" id="q" placeholder="Search titles and topics" spellcheck="false" />
+        <span id="count" class="stamp"></span>
+      </div>
+    </header>
+
+    <div id="list" class="list"></div>
+
+    <div id="empty" class="empty hidden">
+      <p class="empty-title">Nothing here yet</p>
+      <p>Finished lectures show up here with their transcript and summary. Start a capture from the toolbar icon.</p>
+    </div>
+  </main>
+
+  <script type="module" src="history.js"></script>
+</body>
+</html>
